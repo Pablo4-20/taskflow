@@ -9,42 +9,50 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
-    public function index()
-{
-    return TaskResource::collection(Task::all());
-}
+    public function index(Request $request)
+    {
+        // TODO(sesion-05): borra la línea de abajo y descomenta el bloque completo.
+        
+        return TaskResource::collection($request->user()->tasks);
+    }
 
-public function store(Request $request)
-{
-    $validated = $request->validate([
-        'title' => 'required|string|max:255',
-        'description' => 'nullable|string',
-        'status' => 'in:pendiente,en_progreso,completada',
-        'user_id' => 'required|exists:users,id',
-    ]);
-    $task = Task::create($validated);
-    return new TaskResource($task);
-}
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'in:pendiente,en_progreso,completada',
+        ]);
 
-public function show(Task $task)
-{
-    return new TaskResource($task);
-}
+        // TODO(sesion-05): borra la línea de abajo y descomenta el bloque completo.
+        
+         $task = $request->user()->tasks()->create($validated);
+        return new TaskResource($task);
+    }
 
-public function update(Request $request, Task $task)
-{
-    $validated = $request->validate([
-        'title' => 'sometimes|string|max:255',
-        'description' => 'nullable|string',
-        'status' => 'in:pendiente,en_progreso,completada',
-    ]);
-    $task->update($validated);
-    return new TaskResource($task);
-}
+    public function show(Request $request, $id)
+    {
+        $task = $request->user()->tasks()->findOrFail($id);
+        return new TaskResource($task);
+    }
 
-public function destroy(Task $task)
-{
-    $task->delete();
-    return response()->json(null, 204);
-}
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'description' => 'nullable|string',
+            'status' => 'in:pendiente,en_progreso,completada',
+        ]);
+
+        $task = $request->user()->tasks()->findOrFail($id);
+        $task->update($validated);
+        return new TaskResource($task);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $task = $request->user()->tasks()->findOrFail($id);
+        $task->delete();
+        return response()->json(null, 204);
+    }
 }
